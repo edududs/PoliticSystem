@@ -10,6 +10,8 @@ from user.models import Address, Contact, User
 
 
 class ContactInline(admin.TabularInline):
+    """Inline admin for Contact model."""
+
     model = Contact
     extra = 1
     can_delete = True
@@ -17,6 +19,8 @@ class ContactInline(admin.TabularInline):
 
 
 class AddressInlineForm(forms.ModelForm):
+    """Form for Address inline admin."""
+
     class Meta:
         model = Address
         fields = "__all__"
@@ -26,6 +30,8 @@ class AddressInlineForm(forms.ModelForm):
 
 
 class AddressInline(admin.TabularInline):
+    """Inline admin for Address model."""
+
     model = Address
     form = AddressInlineForm
     extra = 1
@@ -34,11 +40,14 @@ class AddressInline(admin.TabularInline):
 
 
 class CustomUserCreationForm(UserCreationForm):
+    """Custom form for creating users with CPF validation."""
+
     class Meta:
         model = User
         fields = ("username", "cpf", "first_name", "last_name")
 
     def clean_cpf(self):
+        """Ensure CPF is unique among users."""
         cpf = self.cleaned_data.get("cpf")
         if cpf:
             qs = User.objects.filter(cpf=cpf)
@@ -50,11 +59,14 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class CustomUserChangeForm(UserChangeForm):
+    """Custom form for changing users with CPF validation."""
+
     class Meta:
         model = User
         fields = ("username", "cpf", "first_name", "last_name", "date_birth")
 
     def clean_cpf(self):
+        """Ensure CPF is unique among users."""
         cpf = self.cleaned_data.get("cpf")
         if cpf:
             qs = User.objects.filter(cpf=cpf)
@@ -66,6 +78,8 @@ class CustomUserChangeForm(UserChangeForm):
 
 
 class UserAdmin(BaseUserAdmin):
+    """Custom admin for User model."""
+
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = User
@@ -109,6 +123,8 @@ class UserAdmin(BaseUserAdmin):
 
 
 class GroupForm(forms.ModelForm):
+    """Custom form for Group admin with Select2 widget."""
+
     class Meta:
         model = Group
         fields = "__all__"
@@ -118,6 +134,8 @@ class GroupForm(forms.ModelForm):
 
 
 class CustomGroupAdmin(GroupAdmin):
+    """Custom admin for Group model."""
+
     form = GroupForm
 
 

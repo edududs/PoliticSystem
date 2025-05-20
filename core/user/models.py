@@ -8,7 +8,11 @@ from user.utils.models_mixins import UserMixin
 
 
 class Contact(BaseModel):
+    """Model for user contacts (email, phone, WhatsApp)."""
+
     class ContactType(models.TextChoices):
+        """Tipos de contato disponíveis."""
+
         EMAIL = "EMAIL", _("Email")
         PHONE = "PHONE", _("Telefone")
         WHATSAPP = "WHATSAPP", _("WhatsApp")
@@ -42,10 +46,13 @@ class Contact(BaseModel):
         verbose_name_plural = "Contatos"
 
     def __str__(self):
+        """String representation for Contact."""
         return f"{self.type}: {self.value}"
 
 
 class Address(BaseModel):
+    """Model for user addresses."""
+
     user = models.ForeignKey(
         "User",
         on_delete=models.CASCADE,
@@ -120,10 +127,13 @@ class Address(BaseModel):
         verbose_name_plural = "Endereços"
 
     def __str__(self):
+        """String representation for Address."""
         return f"{self.street}, {self.number} - {self.city}/{self.state}"
 
 
 class User(UserMixin, AbstractUser, BaseModel):
+    """Custom user model with CPF and birth date."""
+
     cpf = models.CharField(
         max_length=11,
         null=True,
@@ -143,4 +153,9 @@ class User(UserMixin, AbstractUser, BaseModel):
         verbose_name_plural = "Usuários"
 
     def __str__(self):
+        """String representation for User."""
         return self.get_display_name()
+
+
+class SomeOtherClass(models.Model):
+    """Classe auxiliar para o modelo de usuário."""
