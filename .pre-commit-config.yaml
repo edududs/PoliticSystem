@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4  # Use a versão mais recente do Ruff
+    hooks:
+      - id: ruff
+        args: [--fix]  # Corrige e formata automaticamente
+
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: pylint
+        language: python
+        types: [python]
+        require_serial: true
+        exclude: 'migrations/|settings/|venv/|.venv/'
