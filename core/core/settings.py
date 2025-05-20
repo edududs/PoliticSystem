@@ -31,12 +31,15 @@ ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
+    "django_daisy",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
+    "django_select2",
     "rest_framework",
     "rest_framework_simplejwt",
     "user",
@@ -45,6 +48,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -138,3 +142,30 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+DAISY_SETTINGS = {
+    "SITE_TITLE": "Admin PoliticSystem",  # Título na aba do navegador
+    "SITE_HEADER": "Administração",  # Header no topo do admin
+    "INDEX_TITLE": "Bem-vindo ao painel",  # Título da dashboard inicial
+    # 'SITE_LOGO': '/static/admin/img/daisyui-logomark.svg',  # Caminho para seu logo (opcional)
+    # 'EXTRA_STYLES': [],
+    # 'EXTRA_SCRIPTS': [],
+    # 'LOAD_FULL_STYLES': False,
+    # 'SHOW_CHANGELIST_FILTER': False,
+    # 'DONT_SUPPORT_ME': True,  # Esconde o link do GitHub no rodapé
+    # 'SIDEBAR_FOOTNOTE': 'Seu rodapé customizado',
+    "APPS_REORDER": {
+        "user": {
+            "icon": "fa fa-user",
+            "name": "Usuários",
+            "priority": 10,
+        },
+        "auth": {
+            "icon": "fa-solid fa-person-military-pointing",
+            "name": "Autenticação",
+            "divider_title": "Segurança",
+        },
+    },
+}
+
+AUTH_USER_MODEL = "user.User"
