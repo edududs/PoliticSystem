@@ -29,14 +29,26 @@ class AddressInlineForm(forms.ModelForm):
         }
 
 
-class AddressInline(admin.TabularInline):
-    """Inline admin for Address model."""
+class AddressInline(admin.StackedInline):
+    """Inline admin for Address model (stacked, padrão)."""
 
     model = Address
     form = AddressInlineForm
     extra = 1
     can_delete = True
     show_change_link = True
+    fields = (
+        "user",
+        "street",
+        "number",
+        "complement",
+        "neighborhood",
+        "city",
+        "state",
+        "zip_code",
+        "country",
+        "is_active",
+    )
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -83,7 +95,7 @@ class UserAdmin(BaseUserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = User
-    inlines = [ContactInline, AddressInline]
+    inlines = (ContactInline,)
     fieldsets = (
         (None, {"fields": ("username", "password")}),
         (
@@ -137,6 +149,14 @@ class CustomGroupAdmin(GroupAdmin):
     """Custom admin for Group model."""
 
     form = GroupForm
+
+
+@admin.register(Address)
+class AddressAdmin(admin.ModelAdmin):
+    list_display = ("user", "street", "city", "state", "zip_code", "is_active")
+    search_fields = ("user__username", "street", "city", "zip_code")
+    list_filter = ("state", "is_active")
+    autocomplete_fields = ("user",)
 
 
 admin.site.register(User, UserAdmin)
