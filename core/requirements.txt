@@ -20,3 +20,6 @@ python-stdnum==2.1
 PyYAML==6.0.2
 sqlparse==0.5.3
 virtualenv==20.31.2
+responses>=0.25.0
+ipython
+django-extensions

@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv(".env")
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -43,6 +48,9 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "user",
+    "django_filters",
+    "django_q",
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
@@ -169,3 +177,14 @@ DAISY_SETTINGS = {
 }
 
 AUTH_USER_MODEL = "user.User"
+
+Q_CLUSTER = {
+    "name": "PoliticsSystem",
+    "workers": 1,
+    "recycle": 500,
+    "timeout": 60,
+    "retry": 120,
+    "queue_limit": 50,
+    "bulk": 10,
+    "orm": "default",
+}

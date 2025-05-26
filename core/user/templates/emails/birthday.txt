@@ -1,0 +1,11 @@
+Olá {{ user.get_display_name }},
+
+Feliz aniversário! 🎉
+Desejamos muita saúde, alegria e realizações.
+
+Obrigado por estar conosco há {{ user.date_joined|timesince }}!
+
+Conte sempre com a gente.
+
+Abraços,
+Pedro Oliveira
