@@ -94,7 +94,3 @@ O arquivo `pytest.ini` já define o módulo de configurações do Django e ativa
 1. Crie sua *branch* (ex.: `git checkout -b minha-feature`).
 2. Faça suas alterações e garanta que os testes continuam passando.
 3. Envie um *pull request* para revisão.
-
----
-
-Este projeto é mantido apenas para fins educacionais e serve como exemplo de integração entre Django, `django-q` e Mailgun.

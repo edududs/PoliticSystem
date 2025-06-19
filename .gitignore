@@ -10,3 +10,7 @@
 *db.sqlite3
 .env
 .python*
+.DS_Store
+*_cache
+.cursor
+.vscode

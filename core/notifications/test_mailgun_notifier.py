@@ -15,7 +15,7 @@ def mailgun_env(monkeypatch):
 
 
 @pytest.mark.django_db
-def test_mailgun_send_success(mailgun_env, django_user_model):
+def test_mailgun_send_success(mailgun_env, django_user_model):  # noqa: ARG001
     # Cria um usuário e contato real
     user = django_user_model.objects.create(username="testuser")
     contact = Contact.objects.create(
