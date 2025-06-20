@@ -4,30 +4,31 @@ Este documento descreve os principais fluxos de interação do usuário e de dad
 
 ## 1. Fluxo de Autenticação (Login)
 
-Este fluxo detalha como um usuário faz login no sistema, desde a submissão do formulário até a atualização da UI. Ele ilustra a interação entre o frontend Next.js e o backend Django, seguindo a estratégia definida no [ADR-001](./docs/adr/001-auth-strategy.md).
+Este fluxo detalha como um usuário faz login no sistema, desde a submissão do formulário até a atualização da UI. Ele ilustra a interação entre o frontend Next.js e o backend Django, seguindo as estratégias definidas no [ADR-001](./docs/adr/001-auth-strategy.md) e [ADR-002](./docs/adr/002-bff-architecture.md).
 
 ```mermaid
 sequenceDiagram
     participant User
-    participant Next.js Frontend
-    participant Django Backend
+    participant Next.js Browser
+    participant Next.js BFF
+    participant Django API
 
-    User->>Next.js Frontend: Preenche e envia formulário de login (email/senha)
-    Next.js Frontend->>Django Backend: POST /api/token/ (com credenciais no corpo)
+    User->>Next.js Browser: Preenche e envia formulário de login (email/senha)
+    Next.js Browser->>Next.js BFF: POST /api/auth/login (com credenciais)
+    Next.js BFF->>Django API: POST /api/token/ (com credenciais)
 
     alt Credenciais Válidas
-        Django Backend->>Django Backend: Gera Access Token (curta duração) e Refresh Token (longa duração)
-        Note over Django Backend: Define o Refresh Token em um cookie<br/>com flags `HttpOnly` e `SameSite=Strict`.
-        Django Backend-->>Next.js Frontend: Responde 200 OK com { access_token: "..." } no corpo
+        Django API->>Django API: Gera Access Token e Refresh Token
+        Note over Django API: Define o Refresh Token em um cookie<br/>`HttpOnly` e `SameSite=Strict`.
+        Django API-->>Next.js BFF: Responde 200 OK com { access_token: "..." }
 
-        Next.js Frontend->>Next.js Frontend: 1. Armazena Access Token na memória (via AuthContext)
-        Next.js Frontend->>Django Backend: 2. GET /api/users/me/ (com o novo Access Token no Header)
-        Django Backend-->>Next.js Frontend: Responde 200 OK com os dados do usuário
+        Next.js BFF->>Next.js BFF: Armazena o Access Token em um cookie seguro (também HttpOnly) para o browser
+        Next.js BFF-->>Next.js Browser: Responde 200 OK
 
-        Next.js Frontend->>Next.js Frontend: 3. Atualiza o AuthContext com os dados do usuário (`isAuthenticated = true`)
-        Next.js Frontend->>User: Redireciona para o Dashboard ou página principal
+        Next.js Browser->>Next.js Browser: Atualiza o estado da UI (via AuthContext) e redireciona para o Dashboard
     else Credenciais Inválidas
-        Django Backend-->>Next.js Frontend: Responde com erro 401 Unauthorized
-        Next.js Frontend->>User: Exibe mensagem de erro no formulário
+        Django API-->>Next.js BFF: Responde com erro 401 Unauthorized
+        Next.js BFF-->>Next.js Browser: Responde com erro 401
+        Next.js Browser->>User: Exibe mensagem de erro no formulário
     end
 ```

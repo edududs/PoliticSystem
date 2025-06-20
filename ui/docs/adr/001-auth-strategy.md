@@ -1,7 +1,7 @@
 # ADR 001: Estratégia de Autenticação
 
 - **Status**: Proposto
-- **Data**: 2024-08-01
+- **Data**: 20-06-2025T01:50
 
 ## Contexto
 

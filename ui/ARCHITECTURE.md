@@ -2,6 +2,18 @@
 
 Este documento descreve a arquitetura, os padrões e as convenções adotadas no projeto frontend, construído com Next.js, TypeScript e Tailwind CSS. O objetivo é garantir um desenvolvimento consistente, escalável e de fácil manutenção.
 
+## Arquitetura de Alto Nível: Backend for Frontend (BFF)
+
+Adotamos o padrão de arquitetura **Backend for Frontend (BFF)**. Isso significa que nossa aplicação `ui` (Next.js) possui sua própria camada de servidor que atua como um intermediário entre o navegador do cliente e nosso backend principal (Django/DRF).
+
+- **Core API (Django/DRF)**: Nossa fonte da verdade. Fornece endpoints de API robustos, genéricos e poderosos com funcionalidades como filtros, paginação e serialização. É responsável pela lógica de negócio principal e interação com o banco de dados.
+- **BFF (Next.js)**: A camada de experiência. Responsável por:
+    - Orquestrar chamadas à Core API para compor os dados necessários para uma tela específica.
+    - Adaptar e formatar os dados para as necessidades exatas dos componentes React.
+    - Gerenciar o cache de dados para performance.
+    - Lidar com a lógica de autenticação do lado do servidor e proteger segredos (chaves de API).
+- **Implementação no Next.js**: A camada BFF é implementada através de **Route Handlers** (arquivos `route.ts` dentro de `src/app/api/`).
+
 ## Core Stack
 
 - **Framework**: Next.js 14+ (com App Router)
@@ -54,36 +66,32 @@ A base da nossa arquitetura é uma estrita **separação de responsabilidades** 
 - **Uso**: Em qualquer lugar que precisarmos fazer uma chamada de API, importaremos esta instância.
   - `import { api } from '@/lib/api';`
 
-#### `lib/types.ts` (ou `lib/definitions.ts`)
+#### `lib/types/`
 - **Propósito**: Definir um "contrato" de dados para toda a aplicação. Centraliza todas as definições de tipos e interfaces do TypeScript.
-- **Benefício**: Garante consistência, previne erros e melhora o autocomplete do editor.
-- **Exemplo**:
-  ```typescript
-  // src/lib/types.ts
-  export interface User {
-    id: number;
-    username: string;
-    email: string;
-    is_active: boolean;
-    date_joined: string; // ISO 8601 date string
-  }
-
-  export interface Birthday {
-    user: Pick<User, 'id' | 'username'>;
-    date: string;
-  }
+- **Implementação (Padrão de Barris Aninhados)**:
+    - O diretório `lib/types` contém subdiretórios para cada domínio de negócio (ex: `user/`, `post/`).
+    - Cada subdiretório de domínio (`user/`) contém os arquivos de tipo (`user.types.ts`) e seu próprio `index.ts` que exporta todos os tipos daquele domínio.
+    - O `index.ts` principal na raiz de `lib/types/` atua como um agregador, re-exportando os módulos de cada domínio (`export * from './user'`).
+- **Exemplo de Estrutura**:
   ```
+  lib/types/
+  ├── index.ts         (export * from './user')
+  └── user/
+      ├── index.ts     (export * from './user.types')
+      └── user.types.ts
+  ```
+- **Benefício**: Organização máxima e importações consistentemente limpas, mesmo com centenas de tipos.
 - **Uso**: `import type { User } from '@/lib/types';`
 
-#### `lib/queries.ts` (ou `lib/hooks/`)
-- **Propósito**: Abstrair a lógica de data-fetching e gerenciamento de estado do servidor usando React Query.
-- **Implementação**: Cria hooks customizados para cada endpoint da API. Cada hook encapsula uma chamada de API, gerenciando cache, estado de carregamento (`isLoading`), e erros.
-- **Exemplo**:
+#### `lib/hooks/`
+- **Propósito**: Abstrair a lógica de data-fetching e gerenciamento de estado do servidor usando React Query, além de outros hooks de lógica de UI.
+- **Implementação**: Cria hooks customizados para cada endpoint da API (`useGetUsers`) ou para lógica de UI compartilhada (`useAuth`). Cada hook encapsula sua lógica específica.
+- **Exemplo (Data-Fetching)**:
   ```typescript
-  // src/lib/queries.ts
+  // src/lib/hooks/useGetUsers.ts
   import { useQuery } from '@tanstack/react-query';
-  import { api } from './api';
-  import type { User } from './types';
+  import { api } from '@/lib/api';
+  import type { User } from '@/lib/types';
 
   const fetchUsers = async (): Promise<User[]> => {
     const { data } = await api.get('/users/');
@@ -188,7 +196,7 @@ A base da nossa arquitetura é uma estrita **separação de responsabilidades** 
 #### `components/features/`
 - **Propósito**: Componentes específicos de uma funcionalidade do sistema. É aqui que a UI se conecta com a lógica de dados.
 - **Características**:
-    - Importam e utilizam os hooks da `lib/queries.ts`.
+    - Importam e utilizam os hooks da `lib/hooks/`.
     - Passam os dados para componentes `shared` ou `ui`.
     - Contêm a maior parte da lógica de interação do usuário para uma feature específica.
 - **Exemplo (`UserList.tsx`):**
@@ -196,7 +204,7 @@ A base da nossa arquitetura é uma estrita **separação de responsabilidades** 
   // src/components/features/UserList.tsx
   'use client'; // Este componente precisa ser Client Component para usar hooks
 
-  import { useGetUsers } from '@/lib/queries';
+  import { useGetUsers } from '@/lib/hooks';
   import { PageTitle } from '@/components/shared/PageTitle';
   import { UserCard } from '@/components/shared/UserCard'; // Exemplo de outro componente
 
@@ -234,8 +242,12 @@ graph TD
     end
 
     subgraph "Logic Layer (lib)"
-        E[queries.ts] --> F(api.ts);
-        E --> G[types.ts];
+        subgraph "BFF (Server-Side)"
+            RouteHandler[app/api/**/route.ts]
+        end
+        RouteHandler --> E[hooks/*];
+        E --> F(api.ts);
+        E --> G[types/*];
         F --> H{env};
     end
 
