@@ -134,6 +134,13 @@ class Address(BaseModel):
 class User(UserMixin, AbstractUser, BaseModel):
     """Custom user model with CPF and birth date."""
 
+    class Gender(models.TextChoices):
+        """Genders available."""
+
+        MALE = "M", _("Male")
+        FEMALE = "F", _("Female")
+        OTHER = "O", _("Other")
+
     cpf = models.CharField(
         max_length=11,
         null=True,
@@ -146,6 +153,14 @@ class User(UserMixin, AbstractUser, BaseModel):
         blank=True,
         verbose_name="Data de nascimento",
         help_text="Data de nascimento do usuário.",
+    )
+    gender = models.CharField(
+        max_length=1,
+        choices=Gender.choices,
+        null=True,
+        blank=True,
+        verbose_name="Gênero",
+        help_text="Gênero do usuário.",
     )
 
     class Meta:
