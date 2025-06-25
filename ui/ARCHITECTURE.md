@@ -85,27 +85,30 @@ A base da nossa arquitetura é uma estrita **separação de responsabilidades** 
 
 #### `lib/hooks/`
 - **Propósito**: Abstrair a lógica de data-fetching e gerenciamento de estado do servidor usando React Query, além de outros hooks de lógica de UI.
-- **Implementação**: Cria hooks customizados para cada endpoint da API (`useGetUsers`) ou para lógica de UI compartilhada (`useAuth`). Cada hook encapsula sua lógica específica.
-- **Exemplo (Data-Fetching)**:
+- **Implementação**: Cria hooks customizados para cada endpoint da API (`useGetMe`, `useGetUsers`) ou para lógica de UI compartilhada (`useAuth`). Cada hook encapsula sua lógica específica.
+- **Exemplo (Data-Fetching de Rota Autenticada)**:
   ```typescript
-  // src/lib/hooks/useGetUsers.ts
+  // src/lib/hooks/user/useGetMe.ts
+  'use client';
+
   import { useQuery } from '@tanstack/react-query';
   import { api } from '@/lib/api';
   import type { User } from '@/lib/types';
 
-  const fetchUsers = async (): Promise<User[]> => {
-    const { data } = await api.get('/users/');
+  const fetchMe = async (): Promise<User> => {
+    // A chamada é para o nosso BFF (/api/users/me), não para o Django diretamente.
+    const { data } = await api.get('/users/me');
     return data;
   };
 
-  export const useGetUsers = () => {
+  export const useGetMe = () => {
     return useQuery({
-      queryKey: ['users'], // Chave de cache para esta query
-      queryFn: fetchUsers, // Função que busca os dados
+      queryKey: ['me'], // Chave de cache para o usuário logado
+      queryFn: fetchMe,
     });
   };
   ```
-- **Uso**: `const { data: users, isLoading, isError } = useGetUsers();`
+- **Uso**: `const { data: currentUser, isLoading } = useGetMe();`
 
 #### `lib/utils.ts`
 - **Propósito**: Coleção de funções utilitárias, puras e genéricas.
@@ -235,33 +238,30 @@ O diagrama a seguir ilustra como as diferentes partes da nossa arquitetura inter
 
 ```mermaid
 graph TD
-    subgraph "UI Layer (components)"
-        A[page.tsx] --> B(Feature Component);
-        B --> C{Shared Component};
-        C --> D[UI Atom];
+    subgraph "Camada do Cliente (Browser)"
+        A[Página ou Componente de Feature] -->|1. Chama hook| B(Hook customizado<br/>ex: useGetMe);
+        B -->|2. Usa a instância da api| C(lib/api.ts);
+        C -->|3. Faz requisição para o BFF| D[BFF Route Handler<br/>/api/users/me];
     end
 
-    subgraph "Logic Layer (lib)"
-        subgraph "BFF (Server-Side)"
-            RouteHandler[app/api/**/route.ts]
-        end
-        RouteHandler --> E[hooks/*];
-        E --> F(api.ts);
-        E --> G[types/*];
-        F --> H{env};
+    subgraph "Camada do Servidor (Next.js)"
+        D -->|4. Lê cookie e repassa token| E(API Core<br/>Django);
     end
 
-    subgraph "Data Source"
-        I[Django API]
+    subgraph "Backend"
+        E -->|5. Retorna dados protegidos| D;
     end
 
-    B -->|Chama hook| E;
-    F -->|Faz a requisição| I;
+    D -->|6. Retorna dados para o cliente| C;
+    C -->|7. React Query gerencia o estado| B;
+    B -->|8. Fornece dados para a UI| A;
 
-    style D fill:#f9f,stroke:#333,stroke-width:2px
-    style C fill:#ccf,stroke:#333,stroke-width:2px
-    style B fill:#9cf,stroke:#333,stroke-width:2px
-    style A fill:#69c,stroke:#333,stroke-width:2px
+
+    style A fill:#9cf,stroke:#333,stroke-width:2px
+    style B fill:#ccf,stroke:#333,stroke-width:2px
+    style C fill:#f9f,stroke:#333,stroke-width:2px
+    style D fill:#f6a,stroke:#333,stroke-width:2px
+    style E fill:#f90,stroke:#333,stroke-width:2px
 ```
 
 ## Gerenciamento de Estado
