@@ -1,6 +1,5 @@
 # ADR 002: Adoção da Arquitetura Backend for Frontend (BFF)
 
-- **Status**: Aceito
 - **Data**: 20-06-2025T01:50
 
 ## Contexto
