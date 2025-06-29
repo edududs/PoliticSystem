@@ -9,12 +9,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv(".env")
+load_dotenv(".envrc")
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -36,6 +37,7 @@ ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
+    "corsheaders",
     "django_daisy",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -54,6 +56,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -188,3 +191,8 @@ Q_CLUSTER = {
     "bulk": 10,
     "orm": "default",
 }
+
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000").split(
+    ",",
+)
+CORS_ALLOW_CREDENTIALS = True
