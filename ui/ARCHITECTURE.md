@@ -21,6 +21,7 @@ Adotamos o padrão de arquitetura **Backend for Frontend (BFF)**. Isso significa
 - **Estilização**: Tailwind CSS
 - **Requisições HTTP**: Axios
 - **Gerenciamento de Estado de Servidor**: TanStack Query (React Query)
+- **Gerenciamento de Formulários**: React Hook Form + Zod + @hookform/resolvers
 - **Gerenciador de Pacotes**: Yarn
 
 ## Filosofia Principal: Separação de Concerns
@@ -279,8 +280,137 @@ graph TD
 -   **Componentização**: Quando um conjunto de classes se torna complexo ou se repete, ele deve ser extraído para um componente em `components/ui`. Evite criar classes CSS customizadas em arquivos `.css` a menos que seja para um caso muito específico que o Tailwind não cobre.
 -   **Classes Condicionais**: Utilize a função `cn` (de `lib/utils.ts`) para aplicar classes de forma dinâmica ou condicional, mantendo o código limpo.
 
+## Gerenciamento de Formulários
+
+Adotamos **React Hook Form + Zod** como solução principal para gerenciamento de formulários, oferecendo performance otimizada, validação robusta e integração TypeScript-first.
+
+### **Stack de Formulários**
+- **React Hook Form**: Gerenciamento de estado com performance otimizada (re-renderiza apenas campos que mudam).
+- **Zod**: Validação de dados com tipagem TypeScript automática e schemas reutilizáveis.
+- **@hookform/resolvers**: Integração entre React Hook Form e Zod.
+
+### **Estrutura de Formulários**
+
+#### `lib/schemas/`
+- **Propósito**: Centralizar todos os schemas de validação Zod reutilizáveis.
+- **Implementação**: Schemas organizados por domínio (ex: `auth.schemas.ts`, `user.schemas.ts`).
+- **Exemplo**:
+  ```typescript
+  // src/lib/schemas/auth.schemas.ts
+  import { z } from 'zod';
+
+  export const loginSchema = z.object({
+    email: z.string().email('Email inválido'),
+    password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  });
+
+  export type LoginForm = z.infer<typeof loginSchema>;
+  ```
+
+#### `components/ui/Form/`
+- **Propósito**: Componentes de formulário reutilizáveis que se integram com React Hook Form.
+- **Exemplos**: `FormField`, `FormInput`, `FormSelect`, `FormError`.
+- **Características**: Componentes controlados que aceitam `register` do React Hook Form.
+
+### **Padrão de Implementação**
+
+#### **1. Definir Schema**
+```typescript
+// src/lib/schemas/auth.schemas.ts
+import { z } from 'zod';
+
+export const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+});
+
+export type LoginForm = z.infer<typeof loginSchema>;
+```
+
+#### **2. Implementar Formulário**
+```typescript
+// src/components/features/LoginForm.tsx
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema, type LoginForm } from '@/lib/schemas/auth.schemas';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+
+export function LoginForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginForm) => {
+    // Lógica de autenticação via BFF
+    console.log(data);
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div>
+        <Input
+          {...register('email')}
+          type="email"
+          placeholder="Email"
+          error={errors.email?.message}
+        />
+      </div>
+
+      <div>
+        <Input
+          {...register('password')}
+          type="password"
+          placeholder="Senha"
+          error={errors.password?.message}
+        />
+      </div>
+
+      <Button type="submit" disabled={isSubmitting} className="w-full">
+        {isSubmitting ? 'Entrando...' : 'Entrar'}
+      </Button>
+    </form>
+  );
+}
+```
+
+### **Benefícios da Abordagem**
+- **Performance**: React Hook Form renderiza apenas campos que mudam.
+- **Type Safety**: Zod garante tipagem automática e validação em tempo de compilação.
+- **Reutilização**: Schemas podem ser compostos e reutilizados em diferentes formulários.
+- **Flexibilidade**: Não força estrutura específica, permitindo integração com qualquer UI library.
+- **Validação Robusta**: Zod oferece validação poderosa com mensagens customizáveis.
+
+### **Convenções**
+- Sempre use schemas Zod para validação de formulários.
+- Organize schemas por domínio em `lib/schemas/`.
+- Use `zodResolver` para integrar Zod com React Hook Form.
+- Componentes de formulário devem aceitar `register` do React Hook Form.
+- Trate estados de loading e erro adequadamente.
+
 ## Variáveis de Ambiente
 
 -   Use o arquivo `.env.local` (que está no `.gitignore`) para todas as chaves de API e configurações específicas do ambiente de desenvolvimento.
 -   Para que uma variável seja acessível no código do navegador, ela **DEVE** ser prefixada com `NEXT_PUBLIC_`.
 -   **Exemplo**: `NEXT_PUBLIC_API_URL` está disponível no browser, mas `DATABASE_PASSWORD` estaria disponível apenas no lado do servidor.
+
+## Padrão de Proxy de Cores (Tailwind + CSS)
+
+- Todas as classes semânticas de cor (ex: `bg-primary`, `text-primary-foreground`, `border-primary`, etc.) são definidas manualmente em `ui/src/styles/colors.css`.
+- Essas classes usam valores literais HSL (ex: `background-color: hsl(142, 71%, 45%)`) para garantir consistência visual e independência de variáveis CSS globais.
+- **Nunca** defina tokens de cor diretamente no `tailwind.config.ts`.
+- Use essas classes em todos os componentes para garantir padronização e fácil manutenção do design system.
+- Para alterar uma cor do sistema, basta editar o valor correspondente em `colors.css`.
+- Esse arquivo deve ser mantido sincronizado com o design system da equipe.
+- Exemplos de uso:
+  ```tsx
+  <button className="bg-primary text-primary-foreground hover:brightness-95">Entrar</button>
+  <div className="border-destructive">Erro!</div>
+  ```
+- Para variantes (hover, focus, etc.), use utilitários Tailwind normalmente.
