@@ -14,6 +14,17 @@ class IsActiveUser(BasePermission):
         return request.user.is_active
 
 
+class IsAdmin(BasePermission):
+    """Permission that checks if the user is an admin.
+
+    Usage:
+    @http_get("/admin-only", permissions=[IsAdmin])
+    """
+
+    def has_permission(self, request: HttpRequest, controller: ControllerBase) -> bool:
+        return request.user.is_staff or request.user.is_superuser  # type: ignore
+
+
 class HasRole(BasePermission):
     """Dynamic permission based on Django's roles/groups.
 
