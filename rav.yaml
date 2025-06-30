@@ -3,3 +3,5 @@ scripts:
     - cd core && uv run python manage.py runserver
   test:
     - python local/testes/main.py
+  shell:
+    - cd core && uv run python manage.py shell_plus --ipython
