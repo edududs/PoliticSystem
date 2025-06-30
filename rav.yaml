@@ -1,0 +1,5 @@
+scripts:
+  server:
+    - cd core && uv run python manage.py runserver
+  test:
+    - python local/testes/main.py
