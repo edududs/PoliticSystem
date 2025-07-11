@@ -41,7 +41,7 @@ interface InputProps
   extends Omit<InputPropsType, "ref">,
     Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
     VariantProps<typeof inputVariants> {
-  register?: any;
+  register?: unknown;
   labelPosition?: "top" | "bottom" | "left" | "right";
   success?: string;
 }
