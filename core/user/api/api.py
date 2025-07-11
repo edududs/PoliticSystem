@@ -1,5 +1,6 @@
 from typing import List
 
+from django.contrib.auth.hashers import make_password
 from ninja import Router
 from ninja_extra import (
     ControllerBase,
@@ -22,7 +23,7 @@ user_router = Router()
 
 
 @api_controller(
-    "/user",
+    "/users",
     auth=JWTAuth(),
     permissions=[IsAuthenticated, IsActiveUser],
     tags=["Users"],
@@ -37,7 +38,7 @@ class UserCRUDController(ControllerBase):
     def get_me(self, request):
         """Returns the authenticated user's profile."""
         user = request.user
-        user.name = user.get_display_name()
+        user.name = user.get_display_name() or user.username
         return user
 
     @http_get(
@@ -112,7 +113,7 @@ class UserAuthController(ControllerBase):
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        user.set_password(new_password)
+        user.set_password(make_password(new_password))
         user.save()
 
         return {"message": "Password changed successfully"}

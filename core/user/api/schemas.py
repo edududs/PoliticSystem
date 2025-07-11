@@ -37,6 +37,8 @@ class UserRetrieveSchema(Schema):
     cpf: str
     name: str
     email: str
+    date_birth: datetime | None
+    gender: str | None
     last_login: datetime | None
     created_at: datetime
     updated_at: datetime

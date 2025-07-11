@@ -1,7 +1,13 @@
-scripts:
-  server:
-    - cd core && uv run python manage.py runserver
+commands:
+  back:
+    - cd core
+    - uv run --active python manage.py runserver
+  front:
+    - cd ui
+    - yarn dev
   test:
+    - cd core
     - python local/testes/main.py
   shell:
-    - cd core && uv run python manage.py shell_plus --ipython
+    - cd core
+    - uv run --active python manage.py shell_plus --ipython
